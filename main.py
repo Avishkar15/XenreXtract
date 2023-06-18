@@ -3,19 +3,15 @@ import spotipy
 from spotipy import oauth2
 from spotipy.oauth2 import SpotifyOAuth
 from collections import Counter
-from dotenv import load_dotenv
-import os
-from six.moves import input
 
 app = Flask(__name__)
 app.secret_key = 'aaa'
 app.config['aaaa'] = 'spotify-login-session'
 app.config['aaa'] = False  # Set to False if not using HTTPS
-load_dotenv()
 
 
-SPOTIPY_CLIENT_ID = os.environ.get('SPOTIPY_CLIENT_ID')
-SPOTIPY_CLIENT_SECRET = os.environ.get('SPOTIPY_CLIENT_SECRET')
+SPOTIPY_CLIENT_ID = '3260932d70e54be193d856b6fe23d762'
+SPOTIPY_CLIENT_SECRET = '9643ca98b10f461fa03b3a24524bc3cb'
 SPOTIPY_REDIRECT_URI = 'https://xenrextract.onrender.com/callback'
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
 

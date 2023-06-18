@@ -5,6 +5,7 @@ from spotipy.oauth2 import SpotifyOAuth
 from collections import Counter
 from dotenv import load_dotenv
 import os
+from six.moves import input
 
 app = Flask(__name__)
 app.secret_key = 'aaa'

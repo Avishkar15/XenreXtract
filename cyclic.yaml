@@ -10,10 +10,10 @@ build:
       run: pip install -r requirements.txt
 
   artifacts:
-    - name: main
+    - name: app
       path: .
 
 deploy:
   steps:
-    - name: Start main
-      run: python main.py
+    - name: Start app
+      run: gunicorn main:app -b 0.0.0.0:$PORT --timeout 300

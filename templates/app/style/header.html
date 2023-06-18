@@ -1,0 +1,28 @@
+<nav class="navbar navbar-light navbar-expand-lg fixed-top bg-white clean-navbar">
+        <div class="container"><a class="navbar-brand logo" href="{{ url_for('auth.home') }}">RTA Prediction</a><button
+                        data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-1"><span
+                                class="visually-hidden">Toggle
+                                navigation</span><span class="navbar-toggler-icon"></span></button>
+                <div class="collapse navbar-collapse" id="navcol-1">
+                        <ul class="navbar-nav ms-auto">
+                                --<li class="nav-item"></li>
+                                <!--<li class="nav-item"><a class="nav-link {{ 'active' if page=='home' else ''}}" href={{
+                        url_for('auth.home') }}>Home</a></li>
+                <li class="nav-item"><a class="nav-link {{ 'active' if page=='announcements' else ''}}" href={{
+                        url_for('news.announcements') }}>Announcements</a></li>
+                <li class="nav-item"><a class="nav-link {{ 'active' if page=='report' else ''}}" href={{
+                        url_for('report.send_report') }}>Report</a></li>
+                <li class="nav-item"><a class="nav-link {{ 'active' if page=='eda' else ''}}" href={{
+                        url_for('auth.eda') }}>eda</a></li>
+                <li class="nav-item"><a class="nav-link {{ 'active' if page=='feedback' else ''}}" href={{
+                        url_for('feedback.send_feedback') }}>FEEDBACK</a></li>
+                {% if session['loggedin'] %}
+                <li class="nav-item"><a class="nav-link " href={{ url_for('auth.logout') }}>Log Out</a></li>
+                {% else %}
+                <li class="nav-item"><a class="nav-link {{ 'active' if page=='signup' else ''}}" href={{
+                        url_for('auth.signup') }}>Sign UP</a></li>-->
+                                {% endif %}
+                        </ul>
+                </div>
+        </div>
+</nav>

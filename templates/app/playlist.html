@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Playlist Created Successfully! - XenreXtract</title>
+    {% include "app/style/stylesheet.html" %}
+    <style>
+        ul {
+            list-style-type: none;
+            padding: 0;
+            justify-content: center;
+        }
+
+        li {
+            margin: 0 10px;
+        }
+
+        li:last-child {
+            margin-right: 0;
+        }
+
+        .playing {
+            position: relative;
+            top: 50%;
+            left: 50%;
+            width: auto;
+            transform: translateX(-50%) translateY(-50%);
+        }
+
+        .playing:after {
+            display: block;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .now.playing .bar {
+            display: inline-block;
+            position: relative;
+            margin-right: 1px;
+            width: 10px;
+            height: 1px;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #1db9547c, #1db954);
+            color: transparent;
+            animation-name: pulse;
+            animation-duration: 1s;
+            animation-iteration-count: infinite;
+        }
+
+        .paused.playing .bar {
+            animation-iteration-count: 1;
+        }
+
+        .paused.playing:after {
+            content: "Paused (Lame)"
+        }
+
+        .n1 {
+            animation-delay: 0.5s;
+        }
+
+        .n2 {
+            animation-delay: 0.3s;
+        }
+
+        .n3 {
+            animation-delay: 1.2s;
+        }
+
+        .n4 {
+            animation-delay: 0.9s;
+        }
+
+        .n5 {
+            animation-delay: 2.3s;
+        }
+
+        .n6 {
+            animation-delay: 1.5s;
+        }
+
+        .n7 {
+            animation-delay: 3.1s;
+        }
+
+        .n8 {
+            animation-delay: 1.9s;
+        }
+
+        .n9 {
+            animation-delay: 1.2s;
+        }
+
+        .n10 {
+            animation-delay: 0.4s;
+        }
+
+        .n11 {
+            animation-delay: 1.5s;
+        }
+
+        .n12 {
+            animation-delay: 3.1s;
+        }
+
+        .n13 {
+            animation-delay: 1s;
+        }
+
+        .n14 {
+            animation-delay: 2.2s;
+        }
+
+        @keyframes pulse {
+            0% {
+                height: 1px;
+                margin-top: 0;
+            }
+
+            10% {
+                height: 40px;
+                margin-top: -40px;
+            }
+
+            50% {
+                height: 20px;
+                margin-top: -20px;
+            }
+
+            60% {
+                height: 30px;
+                margin-top: -30px;
+            }
+
+            80% {
+                height: 60px;
+                margin-top: -60px;
+            }
+
+            100% {
+                height: 1px;
+                margin-top: 0;
+            }
+        }
+
+        button {
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+
+        .btn-logout {
+            color: #c2383e;
+            border: 1px solid #c2383e;
+            background-color: transparent;
+            border-radius: 50px;
+            border-width: 2px;
+        }
+
+        .btn-logout:hover,
+        .btn-logout:focus {
+            color: #000;
+            border: 1px solid #c2383e;
+            outline: none;
+            background-color: #c2383e;
+        }
+
+        p {
+            font-size: 21px;
+
+        }
+    </style>
+</head>
+
+<body id="page-top" data-bs-spy="scroll" data-bs-target="#mainNav" data-bs-offset="77">
+    <nav class="navbar navbar-light navbar-expand-md fixed-top" id="mainNav">
+        <div class="container"><a class="navbar-brand" href="{{
+            url_for('home') }}" id="homebutton">X<span style="font-size: 75%;">enre</span>X<span
+                    style="font-size: 75%;">tract</span></a><button data-bs-toggle="collapse"
+                class="navbar-toggler navbar-toggler-right" data-bs-target="#navbarResponsive" type="button"
+                aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation" value="Menu"><i
+                    class="fa fa-bars"></i></button>
+            <div class="collapse navbar-collapse" id="navbarResponsive">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item nav-link"><a class="nav-link active" href="#home">Playlist</a></li>
+                    <li class="nav-item nav-link"><a class="nav-link" href="{{
+                        url_for('logout') }} " style="color: #c2383e;">Log Out</a></li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <header class="masthead" id="home"
+        style="background:linear-gradient(180deg,rgba(0, 0, 0, .4) 20%, rgba(0, 0, 0, 1) 90%),url('/static/img/genre.jpg') center/cover fixed;">
+        <div class="intro-body">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 mx-auto">
+                        <h1 class="brand-heading" style="font-size: 34px;">Playlist created
+                            successfully!
+                        </h1>
+                        <p class="intro-text" style="font-family: Lato, sans-serif;">Playlist
+                            <b><i>'{{playlist_name}}'</i></b>
+                            has been successfully added to your library.
+                        </p>
+
+
+                    </div>
+
+                </div>
+            </div>
+            <ul class="list-inline banner-social-buttons" style="margin-top: 80px;">
+                <div class="now playing" id="music" style="margin-top: 0px;">
+                    <span class="bar n14">N</span>
+                    <span class="bar n1">A</span>
+                    <span class="bar n2">B</span>
+                    <span class="bar n3">c</span>
+                    <span class="bar n4">D</span>
+                    <span class="bar n5">E</span>
+                    <span class="bar n6">F</span>
+                    <span class="bar n7">G</span>
+                    <span class="bar n8">H</span>
+                    <span class="bar n9">I</span>
+                    <span class="bar n10">J</span>
+                    <span class="bar n11">K</span>
+                    <span class="bar n12">L</span>
+                    <span class="bar n13">M</span>
+                    <span class="bar n14">N</span>
+                    <span class="bar n6">F</span>
+
+                </div>
+                <li class="list-inline-item">&nbsp;<a href="{{
+                    url_for('callback') }}"><button class="btn btn-primary btn-lg btn-default" type="button"
+                            style="width: 300px;margin-top: -20px; "><i></i><span class=" network-name"
+                                style="font-family: Cabin, sans-serif;">Go
+                                Back</span></button></a></li>
+            </ul>
+
+        </div>
+
+    </header>
+
+    <footer>
+        <div class="container text-center">
+            <p style="font-family: Lato, sans-serif;">Copyright ©&nbsp;<a
+                    href="https://github.com/Avishkar15">XAzoth</a> 2023</p>
+        </div>
+    </footer>
+    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="assets/js/grayscale.js"></script>
+    {% include "app/style/scripts.html" %}
+</body>
+
+</html>

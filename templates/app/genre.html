@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Welcome, {{user_name}}! - XenreXtract</title>
+    {% include "app/style/stylesheet.html" %}
+    <style>
+        ul {
+            list-style-type: none;
+            padding: 0;
+            justify-content: center;
+        }
+
+        li {
+            margin: 0 10px;
+        }
+
+        li:last-child {
+            margin-right: 0;
+        }
+
+        p {
+            font-size: 21px;
+        }
+
+        .masthead.video-header {
+            position: relative;
+            background: none;
+        }
+
+        .video-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gradient-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg,
+                    rgba(0, 0, 0, 0) 0%,
+                    rgba(0, 0, 0, 1) 100%);
+        }
+
+        .section {
+            position: relative;
+            height: auto;
+            /* Adjust the height as needed */
+            overflow: hidden;
+        }
+
+        .video-container1 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .video-container1 video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gradient-overlay1 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%,
+                    rgba(0, 0, 0, 1) 100%);
+        }
+
+        @media (max-width: 767px) {
+            .genre-button {
+                width: 100% !important;
+                /* Full width */
+                height: 50px !important;
+                /* Adjust height as needed */
+                margin: 2px 0 !important;
+                /* Add some vertical spacing */
+                font-size: 18px !important;
+                /* Adjust font size as needed */
+            }
+
+
+        }
+    </style>
+</head>
+
+<body id="page-top" data-bs-spy="scroll" data-bs-target="#mainNav" data-bs-offset="77">
+    <nav class="navbar navbar-light navbar-expand-md fixed-top" id="mainNav">
+        <div class="container"><a class="navbar-brand" href="{{
+            url_for('home') }}" id="homebutton">X<span style="font-size: 75%;">enre</span>X<span
+                    style="font-size: 75%;">tract</span></a><button data-bs-toggle="collapse"
+                class="navbar-toggler navbar-toggler-right" data-bs-target="#navbarResponsive" type="button"
+                aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation" value="Menu"><i
+                    class="fa fa-bars"></i></button>
+            <div class="collapse navbar-collapse" id="navbarResponsive">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item nav-link"><a class="nav-link active" href="#home">hOME</a></li>
+                    <li class="nav-item nav-link"><a class="nav-link " href="#about">Xtract</a></li>
+                    <li class="nav-item nav-link"><a class="nav-link " href="#topsong">Recommend</a></li>
+                    <li class="nav-item nav-link"><a class="nav-link " href="#search">Search</a></li>
+                    <li class="nav-item nav-link"><a class="nav-link " href="{{
+                        url_for('logout') }}" style="color: #c2383e;">Log Out</a></li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <header class="masthead video-header" id="home">
+        <div class="video-container">
+            <video autoplay loop muted>
+                <source src="{{ url_for('static', filename='record.mp4') }}" type="video/mp4">
+            </video>
+            <div class="gradient-overlay"></div>
+        </div>
+        <div class="intro-body">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 mx-auto">
+                        {% include "includes/alert.html" %}
+                        <h1 class="brand-heading">Welcome,<br> {{user_name}}!</h1>
+                        <p class="intro-text" style="font-family: Lato, sans-serif;font-size: 21px;">Welcome aboard!
+                            XenreXtract will create curated playlists based on<br>your favorite genres, tailored just
+                            for
+                            you.
+                        </p>
+                        <a class="btn btn-link btn-circle" role="button" href="#about"><i
+                                class="fa fa-angle-double-down animated"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <section class="text-center content-section" id="about" style="background-color: rgba(255, 228, 196, 0);">
+        <div class="container">
+            <div class="col-lg-8 mx-auto" style="--bs-primary: #1db954;--bs-primary-rgb: 29,185,84;">
+                <h1>Your Top 8 Genres</h1>
+                <p style="font-family: Lato">Based on your listening habits, I've identified your Top 8 Genres.<br>
+                    Now, it's your turn to pick a genre and I'll create a playlist based on your choice. </p>
+                <ul class="list-inline banner-social-buttons">
+                    {% for top_genres in context %}
+                    <li class="list-inline-item">
+                        <form method="POST" action="/generate_playlist/" onsubmit="showLoader()">
+                            <button class="btn btn-primary btn-lg btn-default genre-button" type="submit"
+                                name="button_text" id="toggle" value="{{top_genres}}"
+                                style="width: 170px; height: 80px;margin: 10px;"><i></i><span class=" network-name"
+                                    style="font-family: Cabin, sans-serif;">{{top_genres}}</span></button>
+                        </form>
+                        {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </section>
+    <section class="section">
+        <div class="video-container1">
+            <video autoplay loop muted>
+                <source src="{{ url_for('static', filename='record1.mp4') }}" type="video/mp4">
+            </video>
+            <div class="gradient-overlay1"></div>
+        </div>
+        <div class="text-center content-section" id="topsong" style="background: rgba(255, 228, 196, 0);">
+            <div class="container">
+                <div class="col-lg-8 mx-auto" style="--bs-primary: #1db954;--bs-primary-rgb: 29,185,84;">
+                    <h1>Your Top 12 Songs</h1>
+                    <p style="font-family: Lato">
+                        I've compiled a list of your top 12 most-played Songs based on your listening patterns.<br>
+                        Now, choose a song and I'll recommend you some songs depending on your preferences.
+                    </p>
+                    <ul class="list-inline banner-social-buttons">
+                        {% for track_names, artist_names, track_ids in songs %}
+                        <li class="list-inline-item">
+                            <form method="POST" action="/similar_songs/">
+                                <button class="btn btn-primary btn-lg btn-default genre-button" type="submit"
+                                    name="button_text" id="toggle" value="{{track_ids}}"
+                                    style="width: 170px; height: 80px;margin: 10px; overflow: hidden">
+                                    <i></i><span class="network-name" style="font-family: Cabin, sans-serif;">
+                                        {{track_names}} - {{artist_names}}
+                                    </span>
+                                </button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="text-center content-section" id="search" style="background-color: rgba(255, 228, 196, 0);">
+        <div class="container">
+            <div class="col-lg-8 mx-auto" style="--bs-primary: #1db954;--bs-primary-rgb: 29,185,84;">
+                <h1>Top tracks by an artist!</h1>
+                <p style="font-family: Lato">Enter your favourite artist's name to view your top tracks by them.
+                </p>
+
+                <form method="POST" action="/top_artist">
+                    <input type="search" name="search"
+                        style="font-family: Lato;width: 250px; height: 50px;border-radius: 30px;text-align: center;background-color: rgb(39, 39, 39);color: rgb(255, 255, 255);">
+                    <br>
+                    <button class="btn btn-primary btn-lg btn-default" type="submit" name="button_text" id="toggle"
+                        style="width: 170px; height: 50px;margin: 10px; overflow: hidden"><i></i><span
+                            class=" network-name" style="font-family: Cabin, sans-serif;">search</span></button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container text-center">
+            <p style="font-family: Lato, sans-serif;">Copyright ©&nbsp;<a
+                    href="https://github.com/Avishkar15">XAzoth</a> 2023</p>
+        </div>
+    </footer>
+    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="assets/js/grayscale.js"></script>
+    {% include "app/style/scripts.html" %}
+</body>
+
+</html>

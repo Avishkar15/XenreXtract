@@ -1,0 +1,28 @@
+.btn-default {
+  color: #1db954;
+  border: 1px solid #1db954;
+  background-color: transparent;
+  border-radius: 50px;
+  border-width: 2px;
+}
+
+.btn-default:focus,
+.btn-default:hover {
+  color: #000;
+  border: 1px solid #1db954;
+  outline: none;
+  background-color: #1db954;
+}
+
+a {
+  color: #2581d1;
+}
+
+a:hover {
+  color: #56adf8;
+
+}
+
+#homebutton:hover {
+  color: #1db954;
+}

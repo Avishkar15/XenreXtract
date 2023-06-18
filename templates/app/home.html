@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Home - XenreXtract</title>
+    {% include "app/style/stylesheet.html" %}
+    <style>
+        ul {
+            list-style-type: none;
+            padding: 0;
+            justify-content: center;
+        }
+
+        li {
+            margin: 0 10px;
+        }
+
+        li:last-child {
+            margin-right: 0;
+        }
+
+        p {
+            font-size: 21px;
+        }
+
+        .masthead.video-header {
+            position: relative;
+            background: none;
+        }
+
+        .video-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gradient-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg,
+                    rgba(0, 0, 0, 0.1) 50%,
+                    rgba(0, 0, 0, 1) 100%);
+        }
+    </style>
+</head>
+
+<body id="page-top" data-bs-spy="scroll" data-bs-target="#mainNav" data-bs-offset="77">
+    <nav class="navbar navbar-light navbar-expand-md fixed-top" id="mainNav">
+        <div class="container"><a class="navbar-brand" href="{{
+            url_for('home') }}" id="homebutton">X<span style="font-size: 75%;">enre</span>X<span
+                    style="font-size: 75%;">tract</span></i></a><button data-bs-toggle="collapse"
+                class="navbar-toggler navbar-toggler-right" data-bs-target="#navbarResponsive" type="button"
+                aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation" value="Menu"><i
+                    class="fa fa-bars"></i></button>
+            <div class="collapse navbar-collapse" id="navbarResponsive">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item nav-link"><a class="nav-link active" href="#home">Home</a></li>
+                    <li class="nav-item nav-link"><a class="nav-link " href="#start">Start</a></li>
+                    <li class="nav-item nav-link"><a class="nav-link " href="#about">aBOUT</a></li>
+                    <li class="nav-item nav-link"><a class="nav-link " href="#contact">Hit me up</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <header class="masthead video-header" id="home">
+        <div class="video-container">
+            <video autoplay loop muted>
+                <source src="{{ url_for('static', filename='home.mp4') }}" type="video/mp4">
+            </video>
+            <div class="gradient-overlay"></div>
+        </div>
+        <div class="intro-body">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 mx-auto" style="margin-top: 220px;">
+                        <!--<h1 class="brand-heading" style="font-family: Cabin, sans-serif;">
+                            <i>X<span style="font-size: 75%;">enre</span>X<span style="font-size: 75%;">tract</span></i>
+                        </h1>-->
+                        <h1 class="brand-heading" style="font-family: Cabin, sans-serif;">
+                            <i>‎</i>
+                        </h1>
+                        <p class="intro-text" style="font-family: Lato, sans-serif;">
+                            Organize your liked songs into playlists based on specific genres.<br>
+                            Made with love for insane individuals.
+                        </p>
+                        <a class="btn btn-link btn-circle" role="button" href="#start">
+                            <i class="fa fa-angle-double-down animated"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+
+    <section class="text-center content-section" id="start">
+        <div class="container">
+            <div class="col-lg-8 mx-auto" style="--bs-primary: #1db954;--bs-primary-rgb: 29,185,84;">
+                <h1 style="font-family: Cabin, sans-serif;">Use XenreXtract</h1>
+                <p style="font-family: Lato, sans-serif;">Sign-in with your Spotify account to fetch your liked songs.
+                </p>
+                <a href="{{
+                    url_for('callback') }}"><button class="btn btn-primary btn-lg btn-default" type="button"
+                        style="--bs-primary: #1db954;--bs-primary-rgb: 29,185,84;font-family: Cabin, sans-serif;width: 250px; height: 80px;">Login
+                        with
+                        spotify</button></a>
+            </div>
+        </div>
+    </section>
+    <section class="text-center download-section content-section" id="about"
+        style="background:linear-gradient(180deg,rgba(0, 0, 0, 0.3) 20%, rgba(0, 0, 0, 1)),url('/static/img/intro-bg.jpg') center top/cover fixed;">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <h2 style="font-family: Cabin, sans-serif;">About XenreXtract</h2>
+                    <p style="font-family: Lato, sans-serif;">Hey there! I'm <a
+                            href="https://github.com/Avishkar15"><b>Avishkar</b></a>, a 22-year-old junior UX designer
+                        who has
+                        always had a
+                        penchant for liking every song that catches my ear on Spotify. However, I soon found myself
+                        facing a dilemma - how could I efficiently organize these songs into playlists based on specific
+                        genres?</p>
+                    <p style="font-family: Lato, sans-serif;"> So, I decided to put my creativity to work and developed
+                        an app to solve this problem. Now, with <a href="{{
+                            url_for('home') }}">XenreXtract </a>, you can effortlessly turn your liked
+                        songs
+                        into
+                        playlists based on your favorite genres.</p>
+                    <p style="font-family: Lato, sans-serif;">As a music enthusiast and UX designer, my goal is to
+                        simplify the process of curating personalized playlists, allowing users to effortlessly enjoy
+                        their favorite genres. I strive to continuously innovate and enhance the music listening
+                        experience for everyone.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="text-center content-section" id="contact">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <h2 style="font-family: Cabin, sans-serif;">Hit me up!</h2>
+                    <p style="font-family: Lato, sans-serif;">I would love to hear from you! Feel free to drop me a
+                        follow or send me a message on my social media profiles. Your feedback about this app is
+                        invaluable to me.</p>
+                    <ul class="list-inline banner-social-buttons">
+                        <li class="list-inline-item"><a href="https://www.instagram.com/x.avishkar/" target="_blank"
+                                rel="noopener noreferrer"><button class=" btn btn-primary btn-lg btn-default"
+                                    type="button" style="height: 50px; width: 180px; margin: 5px;">&nbsp;<i
+                                        class="fa fa-instagram fa-fw"></i><span class="network-name"
+                                        style="font-family: Cabin, sans-serif;">&nbsp;Instagram</span></button></a></li>
+
+                        <li class="list-inline-item"><a href="https://www.youtube.com/channel/UC90EmjGjgIi-hn12LUN1c4A"
+                                target="_blank" rel="noopener noreferrer"><button
+                                    class=" btn btn-primary btn-lg btn-default" type="button"
+                                    style="height: 50px; width: 180px;margin: 5px;">&nbsp;<i
+                                        class="fa fa-youtube-play fa-fw"></i><span class="network-name"
+                                        style="font-family: Cabin, sans-serif;">&nbsp;Youtube</span></button></a>
+                        </li>
+
+                        <li class="list-inline-item"><a
+                                href="https://open.spotify.com/user/22luq2fah3a7yuyxwkh3prxci?si=74c74feea27e4416"
+                                target="_blank" rel="noopener noreferrer"><button
+                                    class=" btn btn-primary btn-lg btn-default" type="button"
+                                    style="height: 50px; width: 180px;margin: 5px;">&nbsp;<i
+                                        class="fa fa-spotify fa-fw"></i><span class="network-name"
+                                        style="font-family: Cabin, sans-serif;">&nbsp;Spotify</span></button></a>
+                        </li>
+
+
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    <footer>
+        <div class="container text-center">
+            <p style="font-family: Lato, sans-serif;">Copyright ©&nbsp;<a href="https://github.com/Avishkar15"
+                    target="_blank" rel="noopener noreferrer">XAzoth</a> 2023</p>
+        </div>
+    </footer>
+    {% include "app/style/scripts.html" %}
+</body>
+
+</html>

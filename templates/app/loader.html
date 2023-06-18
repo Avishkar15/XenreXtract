@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/loader.css') }}">
+  <title>Playlist Generated Succesfully!</title>
+</head>
+
+<body style="background-image: url('/static/img/spload.png');">
+  <div style="height: 100vh;
+  text-align: center; overflow: hidden;">
+    <div class='loader'>
+      <div class='loader_overlay'>
+        <div style="margin-top:-110px;">
+          <p><strong>Playlist is being generated...</strong></p>
+        </div>
+      </div>
+      <div class='loader_cogs'>
+        <div class='loader_cogs__top'>
+          <div class='top_part'></div>
+          <div class='top_part'></div>
+          <div class='top_part'></div>
+          <div class='top_hole'></div>
+        </div>
+        <div class='loader_cogs__left'>
+          <div class='left_part'></div>
+          <div class='left_part'></div>
+          <div class='left_part'></div>
+          <div class='left_hole'></div>
+        </div>
+        <div class='loader_cogs__bottom'>
+          <div class='bottom_part'></div>
+          <div class='bottom_part'></div>
+          <div class='bottom_part'></div>
+          <div class='bottom_hole'>
+          </div>
+        </div>
+
+      </div>
+      <script>
+        window.onload = function () {
+          setTimeout(function () {
+            window.location.href = '{{ redirect_url }}';
+          }, 3000);
+        };
+      </script>
+</body>
+
+</html>

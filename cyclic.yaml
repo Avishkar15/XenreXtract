@@ -1,0 +1,19 @@
+version: "1.0"
+
+app:
+  name: XenreXtract
+  framework: python
+
+build:
+  steps:
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+
+  artifacts:
+    - name: main
+      path: .
+
+deploy:
+  steps:
+    - name: Start main
+      run: python main.py

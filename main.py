@@ -42,7 +42,7 @@ def logout():
 @app.route('/callback')
 def callback():
     cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
-    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_handler=cache_handler)
+    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_handler=cache_handler, redirect_uri=SPOTIPY_REDIRECT_URI)
     code=request.args.get("code")
     # Step 2. Being redirected from Spotify auth page
     auth_manager.get_access_token(code)

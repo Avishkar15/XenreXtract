@@ -16,7 +16,23 @@ SPOTIPY_CLIENT_ID = '3260932d70e54be193d856b6fe23d762'
 SPOTIPY_CLIENT_SECRET = '9643ca98b10f461fa03b3a24524bc3cb'
 SPOTIPY_REDIRECT_URI = 'https://xenrextract.onrender.com/callback'
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
-cache_path = '.spotify-cache'
+
+def get_current_user_id():
+    if 'token_info' in session:
+        token_info = session['token_info']
+        return token_info.get('user_id')
+    return None
+
+def get_cache_path(user_id):
+    cache_directory = '.spotify-cache'  # Specify the cache directory here
+    return os.path.join(app.root_path, cache_directory, f'{user_id}.cache')
+
+def delete_cache(user_id):
+    cache_path = get_cache_path(user_id)
+    if os.path.exists(cache_path):
+        os.remove(cache_path)
+
+cache_path = get_cache_path(get_current_user_id())
 
 oauth = SpotifyOAuth(
     client_id=SPOTIPY_CLIENT_ID,
@@ -46,14 +62,15 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.pop("token_info", None)
-    session.clear()  # Clear the entire session
-    full_cache_path = os.path.join(app.root_path, cache_path)
-    if os.path.exists(full_cache_path):
-        os.remove(full_cache_path)
+    user_id = get_current_user_id()
+    if user_id in session['token_info']:
+        session.pop("token_info", None)
+        session.clear()  # Clear the entire session
+        del session['token_info'][user_id]
+        delete_cache(user_id) 
     return render_template('app/home.html')
 
-    
+
 
 @app.route('/callback')
 def callback():

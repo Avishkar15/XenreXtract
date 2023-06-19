@@ -35,7 +35,7 @@ def logout():
 @app.route('/callback')
 def callback():
     code = request.args.get('code')
-    top_genres = top_genres()
+    top_genres = topgenres()
     top_songs = get_top_songs()
     user_info = sp.current_user()
     user_name = user_info['display_name']
@@ -111,7 +111,7 @@ def similar_songs():
 
     return render_template('app/playlist.html', playlist_name=playlist_name)
 
-def top_genres():
+def topgenres():
     top_artists = sp.current_user_top_artists(limit=10, time_range="medium_term")
 
     # Extract the genres from the top artists

@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect,session, flash
+from flask_session import Session
 import spotipy
 from spotipy import oauth2
 from spotipy.oauth2 import SpotifyOAuth
@@ -9,6 +10,7 @@ app = Flask(__name__)
 app.secret_key = 'aaa'
 app.config['aaaa'] = 'spotify-login-session'
 app.config['aaa'] = False  # Set to False if not using HTTPS
+Session(app)
 
 
 SPOTIPY_CLIENT_ID = '3260932d70e54be193d856b6fe23d762'
@@ -16,13 +18,6 @@ SPOTIPY_CLIENT_SECRET = '9643ca98b10f461fa03b3a24524bc3cb'
 SPOTIPY_REDIRECT_URI = 'https://xenrextract.onrender.com/callback'
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
 
-oauth = SpotifyOAuth(
-    client_id=SPOTIPY_CLIENT_ID,
-    client_secret=SPOTIPY_CLIENT_SECRET,
-    redirect_uri=SPOTIPY_REDIRECT_URI,
-    scope=SPOTIPY_SCOPE,
-    cache_path='.spotify-cache'
-)
 
 @app.route('/')
 def home():
@@ -39,7 +34,7 @@ def loader():
 
 @app.route('/logout')
 def logout():
-    session.clear()
+    session.pop("token_info", None)
     return render_template('app/home.html')
 
     
@@ -51,7 +46,7 @@ def callback():
     if request.args.get("code"):
         # Step 2. Being redirected from Spotify auth page
         auth_manager.get_access_token(request.args.get("code"))
-        return redirect('/callback')
+        return redirect('/')
 
     if not auth_manager.validate_token(cache_handler.get_cached_token()):
         # Step 1. Display sign in link when no token

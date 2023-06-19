@@ -40,6 +40,8 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop("token_info", None)
+    session.clear()  # Clear the entire session
+    oauth._cache_path = '.spotify-cache'
     return render_template('app/home.html')
 
     

@@ -27,6 +27,11 @@ oauth = SpotifyOAuth(
 
 @app.route('/')
 def home():
+    session.pop("token_info", None)
+    session.clear()  # Clear the entire session
+    cache_path = oauth.cache_path
+    if os.path.exists(cache_path):
+        os.remove(cache_path)
     return render_template('app/home.html', page='home')
 
 @app.route('/genre')
@@ -42,7 +47,9 @@ def login():
 def logout():
     session.pop("token_info", None)
     session.clear()  # Clear the entire session
-    oauth._cache_path = '.spotify-cache'
+    cache_path = oauth.cache_path
+    if os.path.exists(cache_path):
+        os.remove(cache_path)
     return render_template('app/home.html')
 
     

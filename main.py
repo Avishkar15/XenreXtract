@@ -4,6 +4,7 @@ from spotipy import oauth2
 from spotipy.oauth2 import SpotifyOAuth
 from collections import Counter
 import os
+import binascii
 
 
 app = Flask(__name__)
@@ -16,7 +17,9 @@ SPOTIPY_CLIENT_ID = '3260932d70e54be193d856b6fe23d762'
 SPOTIPY_CLIENT_SECRET = '9643ca98b10f461fa03b3a24524bc3cb'
 SPOTIPY_REDIRECT_URI = 'https://xenrextract.onrender.com/callback'
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
-cache_path = '.spotify-cache'
+cache_dir = os.path.join(app.instance_path, 'spotify_cache')
+os.makedirs(cache_dir, exist_ok=True)
+cache_path = os.path.join(cache_dir, binascii.hexlify(os.urandom(16)).decode() + '.cache')
 
 oauth = SpotifyOAuth(
     client_id=SPOTIPY_CLIENT_ID,
@@ -47,16 +50,10 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop("token_info", None)
-    
-    # Get the current user's ID from the session
-    user_id = session.get('user_id', 'default')  # Default ID if user ID is not available
-    
-    cache_filename = f'spotify-cache-{user_id}'
-    cache_path = os.path.join(app.root_path, cache_filename)
-    
-    # Remove the cache file if it exists
-    if os.path.exists(cache_path):
-        os.remove(cache_path)
+    session.clear()  # Clear the entire session
+    full_cache_path = os.path.join(app.root_path, cache_path)
+    if os.path.exists(full_cache_path):
+        os.remove(full_cache_path)
     return render_template('app/home.html')
 
     
@@ -68,16 +65,10 @@ def callback():
     session['token_info'] = token_info
     access_token = token_info['access_token']
     sp = spotipy.Spotify(auth=access_token)
-    user_info = sp.current_user()
-    user_id = user_info['id']
-    session['user_id'] = user_id
-    user_name = user_info['display_name']
-    cache_filename = f'spotify-cache-{user_id}'
-    cache_path = os.path.join(app.root_path, cache_filename)
-    oauth.cache_path = cache_path
     top_genres = topgenres()
     top_songs = get_top_songs()
-    
+    user_info = sp.current_user()
+    user_name = user_info['display_name']
     return render_template('app/genre.html', context=top_genres, user_name=user_name, songs=top_songs)
 
 def create_or_get_playlist(user_id, playlist_name, playlist_description):

@@ -14,9 +14,9 @@ app.config['SESSION_FILE_DIR'] = './.flask_session/'
 Session(app)
 
 
-SPOTIPY_CLIENT_ID = os.environ.get('CLIENT_ID')
-SPOTIPY_CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
-SPOTIPY_REDIRECT_URI = os.environ.get('REDIRECT_URI')
+SPOTIPY_CLIENT_ID = os.environ.get('SPOTIPY_CLIENT_ID')
+SPOTIPY_CLIENT_SECRET = os.environ.get('SPOTIPY_CLIENT_SECRET')
+SPOTIPY_REDIRECT_URI = os.environ.get('SPOTIPY_REDIRECT_URI')
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
 
 

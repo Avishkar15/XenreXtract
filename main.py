@@ -32,13 +32,14 @@ def home():
 def genre():
     return render_template('app/genre.html', page='Your Top 8 Genres')
 
-@app.route('/playlist')
-def loader():
-    return render_template('app/playlist.html', page='Loading')
+@app.route('/login')
+def login():
+    auth_url = oauth.get_authorize_url()
+    return redirect(auth_url)
 
 @app.route('/logout')
 def logout():
-    session.clear()
+    session.pop("token_info", None)
     return render_template('app/home.html')
 
     

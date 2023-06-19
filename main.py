@@ -3,12 +3,13 @@ import spotipy
 from spotipy import oauth2
 from spotipy.oauth2 import SpotifyOAuth
 from collections import Counter
+import os
 
 
 app = Flask(__name__)
-app.secret_key = 'aaa'
-app.config['aaaa'] = 'spotify-login-session'
-app.config['aaa'] = True  # Set to False if not using HTTPS
+app.config['SECRET_KEY'] = os.urandom(64)
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_COOKIE_SECURE'] = True  # Set to False if not using HTTPS
 
 
 SPOTIPY_CLIENT_ID = '3260932d70e54be193d856b6fe23d762'

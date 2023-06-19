@@ -16,33 +16,23 @@ SPOTIPY_CLIENT_ID = '3260932d70e54be193d856b6fe23d762'
 SPOTIPY_CLIENT_SECRET = '9643ca98b10f461fa03b3a24524bc3cb'
 SPOTIPY_REDIRECT_URI = 'https://xenrextract.onrender.com/callback'
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
-
-def get_current_user_id():
-    if 'token_info' in session:
-        token_info = session['token_info']
-        return token_info.get('user_id')
-    return None
-
-def get_cache_path(user_id):
-    cache_directory = '.spotify-cache'  # Specify the cache directory here
-    return os.path.join(app.root_path, cache_directory, f'{user_id}.cache')
-
-def delete_cache(user_id):
-    cache_path = get_cache_path(user_id)
-    if os.path.exists(cache_path):
-        os.remove(cache_path)
-
+cache_path = '.spotify-cache'
 
 oauth = SpotifyOAuth(
     client_id=SPOTIPY_CLIENT_ID,
     client_secret=SPOTIPY_CLIENT_SECRET,
     redirect_uri=SPOTIPY_REDIRECT_URI,
     scope=SPOTIPY_SCOPE,
-    cache_path='.spotify-cache'
+    cache_path=cache_path
 )
 
 @app.route('/')
 def home():
+    session.pop("token_info", None)
+    session.clear()  # Clear the entire session
+    full_cache_path = os.path.join(app.root_path, cache_path)
+    if os.path.exists(full_cache_path):
+        os.remove(full_cache_path)
     return render_template('app/home.html', page='home')
 
 @app.route('/genre')
@@ -56,34 +46,38 @@ def login():
 
 @app.route('/logout')
 def logout():
-    user_id = get_current_user_id()
-    if user_id:
-        session.pop('user_id', None)  # Remove the user ID from the session
-        session['token_info'].pop(user_id, None)  # Remove token info for the user
-        oauth.cache_path = get_cache_path(user_id)  # Set cache path for the user
-        # Optionally, you can delete the cache file for the user here
-        cache_path = get_cache_path(user_id)
-        if os.path.exists(cache_path):
-            os.remove(cache_path)
+    session.pop("token_info", None)
+    
+    # Get the current user's ID from the session
+    user_id = session.get('user_id', 'default')  # Default ID if user ID is not available
+    
+    cache_filename = f'spotify-cache-{user_id}'
+    cache_path = os.path.join(app.root_path, cache_filename)
+    
+    # Remove the cache file if it exists
+    if os.path.exists(cache_path):
+        os.remove(cache_path)
     return render_template('app/home.html')
 
-
+    
 
 @app.route('/callback')
 def callback():
     code = request.args.get('code')
     token_info = oauth.get_access_token(code)
-    user_id = token_info['id']  # Unique identifier for the user
-    session['user_id'] = user_id  # Store the user ID in the session
-    session.setdefault('token_info', {})[user_id] = token_info  # Store token info for the user
-    oauth.cache_path = get_cache_path(user_id)  #
     session['token_info'] = token_info
     access_token = token_info['access_token']
     sp = spotipy.Spotify(auth=access_token)
+    user_info = sp.current_user()
+    user_id = user_info['id']
+    session['user_id'] = user_id
+    user_name = user_info['display_name']
+    cache_filename = f'spotify-cache-{user_id}'
+    cache_path = os.path.join(app.root_path, cache_filename)
+    oauth.cache_path = cache_path
     top_genres = topgenres()
     top_songs = get_top_songs()
-    user_info = sp.current_user()
-    user_name = user_info['display_name']
+    
     return render_template('app/genre.html', context=top_genres, user_name=user_name, songs=top_songs)
 
 def create_or_get_playlist(user_id, playlist_name, playlist_description):

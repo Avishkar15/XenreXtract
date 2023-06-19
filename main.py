@@ -18,10 +18,9 @@ SPOTIPY_REDIRECT_URI = 'https://xenrextract.onrender.com/callback'
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
 
 def get_current_user_id():
-    with app.app_context():
-        if 'token_info' in session:
-            token_info = session['token_info']
-            return token_info.get('user_id')
+    if 'token_info' in session:
+        token_info = session['token_info']
+        return token_info.get('user_id')
     return None
 
 def get_cache_path(user_id):
@@ -33,23 +32,17 @@ def delete_cache(user_id):
     if os.path.exists(cache_path):
         os.remove(cache_path)
 
-cache_path = get_cache_path(get_current_user_id())
 
 oauth = SpotifyOAuth(
     client_id=SPOTIPY_CLIENT_ID,
     client_secret=SPOTIPY_CLIENT_SECRET,
     redirect_uri=SPOTIPY_REDIRECT_URI,
     scope=SPOTIPY_SCOPE,
-    cache_path=cache_path
+    cache_path='.spotify-cache'
 )
 
 @app.route('/')
 def home():
-    session.pop("token_info", None)
-    session.clear()  # Clear the entire session
-    full_cache_path = os.path.join(app.root_path, cache_path)
-    if os.path.exists(full_cache_path):
-        os.remove(full_cache_path)
     return render_template('app/home.html', page='home')
 
 @app.route('/genre')
@@ -64,11 +57,14 @@ def login():
 @app.route('/logout')
 def logout():
     user_id = get_current_user_id()
-    if user_id in session['token_info']:
-        session.pop("token_info", None)
-        session.clear()  # Clear the entire session
-        del session['token_info'][user_id]
-        delete_cache(user_id) 
+    if user_id:
+        session.pop('user_id', None)  # Remove the user ID from the session
+        session['token_info'].pop(user_id, None)  # Remove token info for the user
+        oauth.cache_path = get_cache_path(user_id)  # Set cache path for the user
+        # Optionally, you can delete the cache file for the user here
+        cache_path = get_cache_path(user_id)
+        if os.path.exists(cache_path):
+            os.remove(cache_path)
     return render_template('app/home.html')
 
 
@@ -77,6 +73,10 @@ def logout():
 def callback():
     code = request.args.get('code')
     token_info = oauth.get_access_token(code)
+    user_id = token_info['id']  # Unique identifier for the user
+    session['user_id'] = user_id  # Store the user ID in the session
+    session.setdefault('token_info', {})[user_id] = token_info  # Store token info for the user
+    oauth.cache_path = get_cache_path(user_id)  #
     session['token_info'] = token_info
     access_token = token_info['access_token']
     sp = spotipy.Spotify(auth=access_token)

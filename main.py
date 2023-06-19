@@ -43,9 +43,9 @@ def logout():
 def callback():
     cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_handler=cache_handler)
-    request.args.get("code"):
+    code=request.args.get("code")
     # Step 2. Being redirected from Spotify auth page
-    auth_manager.get_access_token(request.args.get("code"))
+    auth_manager.get_access_token(code)
 
     if not auth_manager.validate_token(cache_handler.get_cached_token()):
         # Step 1. Display sign in link when no token

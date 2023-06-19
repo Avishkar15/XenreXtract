@@ -32,6 +32,15 @@ def logout():
     session.clear()
     return render_template('app/home.html')
 
+@app.route('/callback')
+def callback():
+    code = request.args.get('code')
+    top_genres = top_genres()
+    top_songs = get_top_songs()
+    user_info = sp.current_user()
+    user_name = user_info['display_name']
+    return render_template('app/genre.html', context=top_genres, user_name=user_name, songs=top_songs)
+
 @app.route('/generate_playlist/', methods=['POST'])
 def generate_playlist():
     genre = request.form['button_text']

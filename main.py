@@ -18,9 +18,10 @@ SPOTIPY_REDIRECT_URI = 'https://xenrextract.onrender.com/callback'
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
 
 def get_current_user_id():
-    if 'token_info' in session:
-        token_info = session['token_info']
-        return token_info.get('user_id')
+    with app.app_context():
+        if 'token_info' in session:
+            token_info = session['token_info']
+            return token_info.get('user_id')
     return None
 
 def get_cache_path(user_id):

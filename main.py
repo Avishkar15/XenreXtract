@@ -16,13 +16,12 @@ Session(app)
 
 SPOTIPY_CLIENT_ID = '3260932d70e54be193d856b6fe23d762'
 SPOTIPY_CLIENT_SECRET = '9643ca98b10f461fa03b3a24524bc3cb'
-SPOTIPY_REDIRECT_URI = 'https://xenrextract.onrender.com/callback'
+SPOTIPY_REDIRECT_URI = 'https://xenrextract.onrender.com/'
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
 
 
 @app.route('/')
 def home():
-
     return render_template('app/home.html', page='home')
 
 @app.route('/genre')

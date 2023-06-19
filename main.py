@@ -51,12 +51,12 @@ def callback():
     if request.args.get("code"):
         # Step 2. Being redirected from Spotify auth page
         auth_manager.get_access_token(request.args.get("code"))
-        return redirect('/')
+        return redirect('/callback')
 
     if not auth_manager.validate_token(cache_handler.get_cached_token()):
         # Step 1. Display sign in link when no token
         auth_url = auth_manager.get_authorize_url()
-        return f'<h2><a href="{auth_url}">Sign in</a></h2>'
+        redirect(auth_url)
 
     # Step 3. Signed in, display data
     sp = spotipy.Spotify(auth_manager=auth_manager)

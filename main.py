@@ -26,7 +26,7 @@ oauth = SpotifyOAuth(
 
 @app.route('/')
 def home():
-    
+
     return render_template('app/home.html', page='home')
 
 @app.route('/genre')
@@ -59,13 +59,6 @@ def callback():
         return f'<h2><a href="{auth_url}">Sign in</a></h2>'
 
     # Step 3. Signed in, display data
-    spotify = spotipy.Spotify(auth_manager=auth_manager)
-    return f'<h2>Hi {spotify.me()["display_name"]}, ' \
-           f'<small><a href="/sign_out">[sign out]<a/></small></h2>' \
-           f'<a href="/playlists">my playlists</a> | ' \
-           f'<a href="/currently_playing">currently playing</a> | ' \
-        f'<a href="/current_user">me</a>' \
-
     sp = spotipy.Spotify(auth_manager=auth_manager)
     top_genres = topgenres()
     top_songs = get_top_songs()

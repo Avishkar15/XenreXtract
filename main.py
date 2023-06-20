@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_COOKIE_SECURE'] = True  # Set to False if not using HTTPS
-app.config['SESSION_REDIS'] = os.getenv('REDIS_URL')
+app.config['SESSION_REDIS'] = redis.from_url('redis://localhost:6379')
 
 
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
@@ -21,18 +21,14 @@ SPOTIPY_REDIRECT_URI = os.getenv('SPOTIPY_REDIRECT_URI')
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
 cache_dir = os.path.join(app.instance_path, 'spotify_cache')
 os.makedirs(cache_dir, exist_ok=True)
-
-def get_cache_path():
-    user_id = session['token_info']['user_id']
-    cache_filename = f"{user_id}_{binascii.hexlify(os.urandom(16)).decode()}.cache"
-    return os.path.join(cache_dir, cache_filename)
+cache_path = os.path.join(cache_dir, binascii.hexlify(os.urandom(16)).decode() + '.cache')
 
 oauth = SpotifyOAuth(
     client_id=SPOTIPY_CLIENT_ID,
     client_secret=SPOTIPY_CLIENT_SECRET,
     redirect_uri=SPOTIPY_REDIRECT_URI,
     scope=SPOTIPY_SCOPE,
-    cache_path=get_cache_path()
+    cache_path=cache_path
 )
 
 @app.before_request
@@ -40,7 +36,6 @@ def before_request():
     delete_cache_if_not_logged_out()
 
 def delete_cache_if_not_logged_out():
-    cache_path=get_cache_path()
     # Check if the user is logged in and if the session has expired
     if 'token_info' in session and 'token_expiry' in session:
         token_expiry = session['token_expiry']
@@ -51,7 +46,6 @@ def delete_cache_if_not_logged_out():
 
 @app.route('/')
 def home():
-    cache_path=get_cache_path()
     session.pop("token_info", None)
     session.clear()  # Clear the entire session
     full_cache_path = os.path.join(app.root_path, cache_path)
@@ -70,7 +64,6 @@ def login():
 
 @app.route('/logout')
 def logout():
-    cache_path=get_cache_path()
     session.pop("token_info", None)
     session.clear()  # Clear the entire session
     full_cache_path = os.path.join(app.root_path, cache_path)
@@ -82,6 +75,11 @@ def logout():
 
 @app.route('/callback')
 def callback():
+    session.pop("token_info", None)
+    session.clear()  # Clear the entire session
+    full_cache_path = os.path.join(app.root_path, cache_path)
+    if os.path.exists(full_cache_path):
+        os.remove(full_cache_path)
     code = request.args.get('code')
     token_info = oauth.get_access_token(code)
     session['token_info'] = token_info

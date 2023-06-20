@@ -7,12 +7,13 @@ import os
 import binascii
 from datetime import datetime
 import redis
+import shutil
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_COOKIE_SECURE'] = True  # Set to False if not using HTTPS
-app.config['SESSION_REDIS'] = redis.from_url('redis://red-ci8p1al9aq0ee2f8kln0:6379')
+app.config['SESSION_REDIS'] = redis.from_url(os.environ['REDIS_URL'])
 
 
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
@@ -48,14 +49,8 @@ def delete_cache_if_not_logged_out():
 def home():
     session.pop("token_info", None)
     session.clear()  # Clear the entire session
-    full_cache_path = os.path.join(app.root_path, cache_path)
-    if os.path.exists(full_cache_path):
-        os.remove(full_cache_path)
     return render_template('app/home.html', page='home')
 
-@app.route('/genre')
-def genre():
-    return render_template('app/genre.html', page='Your Top 8 Genres')
 
 @app.route('/login')
 def login():

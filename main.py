@@ -14,7 +14,7 @@ app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_COOKIE_SECURE'] = True  # Set to False if not using HTTPS
 app.config['SESSION_REDIS'] = redis.from_url(os.environ['REDIS_URL'])
-
+redis_connection = app.config['SESSION_REDIS']
 
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
 SPOTIPY_CLIENT_SECRET = os.getenv('SPOTIPY_CLIENT_SECRET')
@@ -49,6 +49,13 @@ def delete_cache_if_not_logged_out():
 def home():
     session.pop("token_info", None)
     session.clear()  # Clear the entire session
+    if os.path.exists(cache_dir):
+        for file_name in os.listdir(cache_dir):
+            file_path = os.path.join(cache_dir, file_name)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            else:
+                shutil.rmtree(file_path)
     return render_template('app/home.html', page='home')
 
 

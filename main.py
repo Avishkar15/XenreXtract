@@ -6,12 +6,13 @@ from collections import Counter
 import os
 import binascii
 from datetime import datetime
-
+import redis
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
-app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_COOKIE_SECURE'] = True  # Set to False if not using HTTPS
+app.config['SESSION_REDIS'] = os.getenv('REDIS_URL')
 
 
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
@@ -32,14 +33,16 @@ oauth = SpotifyOAuth(
 
 @app.before_request
 def before_request():
+    delete_cache_if_not_logged_out()
+
+def delete_cache_if_not_logged_out():
     # Check if the user is logged in and if the session has expired
     if 'token_info' in session and 'token_expiry' in session:
         token_expiry = session['token_expiry']
         if token_expiry and token_expiry < datetime.utcnow():
             # Clean up the cache if the session has expired
-            full_cache_path = os.path.join(app.root_path, cache_path)
-            if os.path.exists(full_cache_path):
-                os.remove(full_cache_path)
+            if os.path.exists(cache_path):
+                os.remove(cache_path)
 
 @app.route('/')
 def home():

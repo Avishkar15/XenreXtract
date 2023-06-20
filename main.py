@@ -5,6 +5,7 @@ from spotipy.oauth2 import SpotifyOAuth
 from collections import Counter
 import os
 import binascii
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -28,6 +29,17 @@ oauth = SpotifyOAuth(
     scope=SPOTIPY_SCOPE,
     cache_path=cache_path
 )
+
+@app.before_request
+def before_request():
+    # Check if the user is logged in and if the session has expired
+    if 'token_info' in session and 'token_expiry' in session:
+        token_expiry = session['token_expiry']
+        if token_expiry and token_expiry < datetime.utcnow():
+            # Clean up the cache if the session has expired
+            full_cache_path = os.path.join(app.root_path, cache_path)
+            if os.path.exists(full_cache_path):
+                os.remove(full_cache_path)
 
 @app.route('/')
 def home():
@@ -86,11 +98,6 @@ def create_or_get_playlist(user_id, playlist_name, playlist_description):
 
 @app.route('/generate_playlist/', methods=['POST'])
 def generate_playlist():
-    session.pop("token_info", None)
-    session.clear()  # Clear the entire session
-    full_cache_path = os.path.join(app.root_path, cache_path)
-    if os.path.exists(full_cache_path):
-        os.remove(full_cache_path)
     if 'token_info' not in session:
         return redirect('/')
 
@@ -147,11 +154,6 @@ def generate_playlist():
 
 @app.route('/similar_songs/', methods=['POST'])
 def similar_songs():
-    session.pop("token_info", None)
-    session.clear()  # Clear the entire session
-    full_cache_path = os.path.join(app.root_path, cache_path)
-    if os.path.exists(full_cache_path):
-        os.remove(full_cache_path)
     if 'token_info' not in session:
         return redirect('/')
 
@@ -237,11 +239,6 @@ def get_top_songs(limit=12):
 
 @app.route('/top_artist', methods=['POST'])
 def top_artist():
-    session.pop("token_info", None)
-    session.clear()  # Clear the entire session
-    full_cache_path = os.path.join(app.root_path, cache_path)
-    if os.path.exists(full_cache_path):
-        os.remove(full_cache_path)
     if 'token_info' not in session:
         return redirect('/')
 

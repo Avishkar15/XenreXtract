@@ -55,6 +55,19 @@
                     rgba(0, 0, 0, 0.1) 50%,
                     rgba(0, 0, 0, 1) 100%);
         }
+
+        @media (max-width: 767px) {
+            .genre-button {
+                width: 100% !important;
+                /* Full width */
+                height: 50px !important;
+                /* Adjust height as needed */
+                margin: 2px 0 !important;
+                /* Add some vertical spacing */
+                font-size: 18px !important;
+                /* Adjust font size as needed */
+            }
+        }
     </style>
 </head>
 
@@ -158,14 +171,15 @@
                         invaluable to me.</p>
                     <ul class="list-inline banner-social-buttons">
                         <li class="list-inline-item"><a href="https://www.instagram.com/x.avishkar/" target="_blank"
-                                rel="noopener noreferrer"><button class=" btn btn-primary btn-lg btn-default"
-                                    type="button" style="height: 50px; width: 180px; margin: 5px;">&nbsp;<i
+                                rel="noopener noreferrer"><button
+                                    class=" btn btn-primary btn-lg btn-default genre-button" type="button"
+                                    style="height: 50px; width: 180px; margin: 5px;">&nbsp;<i
                                         class="fa fa-instagram fa-fw"></i><span class="network-name"
                                         style="font-family: Cabin, sans-serif;">&nbsp;Instagram</span></button></a></li>
 
                         <li class="list-inline-item"><a href="https://www.youtube.com/channel/UC90EmjGjgIi-hn12LUN1c4A"
                                 target="_blank" rel="noopener noreferrer"><button
-                                    class=" btn btn-primary btn-lg btn-default" type="button"
+                                    class=" btn btn-primary btn-lg btn-default genre-button" type="button"
                                     style="height: 50px; width: 180px;margin: 5px;">&nbsp;<i
                                         class="fa fa-youtube-play fa-fw"></i><span class="network-name"
                                         style="font-family: Cabin, sans-serif;">&nbsp;Youtube</span></button></a>
@@ -174,7 +188,7 @@
                         <li class="list-inline-item"><a
                                 href="https://open.spotify.com/user/22luq2fah3a7yuyxwkh3prxci?si=74c74feea27e4416"
                                 target="_blank" rel="noopener noreferrer"><button
-                                    class=" btn btn-primary btn-lg btn-default" type="button"
+                                    class=" btn btn-primary btn-lg btn-default genre-button" type="button"
                                     style="height: 50px; width: 180px;margin: 5px;">&nbsp;<i
                                         class="fa fa-spotify fa-fw"></i><span class="network-name"
                                         style="font-family: Cabin, sans-serif;">&nbsp;Spotify</span></button></a>

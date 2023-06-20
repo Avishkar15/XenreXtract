@@ -12,7 +12,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_COOKIE_SECURE'] = True  # Set to False if not using HTTPS
-app.config['SESSION_REDIS'] = redis.from_url('redis://localhost:6379')
+app.config['SESSION_REDIS'] = redis.from_url('redis://red-ci8p1al9aq0ee2f8kln0:6379')
 
 
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
@@ -75,11 +75,7 @@ def logout():
 
 @app.route('/callback')
 def callback():
-    session.pop("token_info", None)
-    session.clear()  # Clear the entire session
-    full_cache_path = os.path.join(app.root_path, cache_path)
-    if os.path.exists(full_cache_path):
-        os.remove(full_cache_path)
+    
     code = request.args.get('code')
     token_info = oauth.get_access_token(code)
     session['token_info'] = token_info

@@ -21,14 +21,18 @@ SPOTIPY_REDIRECT_URI = os.getenv('SPOTIPY_REDIRECT_URI')
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
 cache_dir = os.path.join(app.instance_path, 'spotify_cache')
 os.makedirs(cache_dir, exist_ok=True)
-cache_path = os.path.join(cache_dir, binascii.hexlify(os.urandom(16)).decode() + '.cache')
+
+def get_cache_path():
+    user_id = session['token_info']['user_id']
+    cache_filename = f"{user_id}_{binascii.hexlify(os.urandom(16)).decode()}.cache"
+    return os.path.join(cache_dir, cache_filename)
 
 oauth = SpotifyOAuth(
     client_id=SPOTIPY_CLIENT_ID,
     client_secret=SPOTIPY_CLIENT_SECRET,
     redirect_uri=SPOTIPY_REDIRECT_URI,
     scope=SPOTIPY_SCOPE,
-    cache_path=cache_path
+    cache_path=get_cache_path
 )
 
 @app.before_request
@@ -36,6 +40,7 @@ def before_request():
     delete_cache_if_not_logged_out()
 
 def delete_cache_if_not_logged_out():
+    cache_path=get_cache_path
     # Check if the user is logged in and if the session has expired
     if 'token_info' in session and 'token_expiry' in session:
         token_expiry = session['token_expiry']
@@ -46,6 +51,7 @@ def delete_cache_if_not_logged_out():
 
 @app.route('/')
 def home():
+    cache_path=get_cache_path
     session.pop("token_info", None)
     session.clear()  # Clear the entire session
     full_cache_path = os.path.join(app.root_path, cache_path)
@@ -64,6 +70,7 @@ def login():
 
 @app.route('/logout')
 def logout():
+    cache_path=get_cache_path
     session.pop("token_info", None)
     session.clear()  # Clear the entire session
     full_cache_path = os.path.join(app.root_path, cache_path)

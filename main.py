@@ -1,54 +1,35 @@
-from flask import Flask, render_template, request, redirect,session, flash, g
+from flask import Flask, render_template, request, redirect, session, flash
 import spotipy
 from spotipy import oauth2
 from spotipy.oauth2 import SpotifyOAuth
+from spotipy.cache_handler import CacheFileHandler
 from collections import Counter
 import os
 import binascii
 from datetime import datetime
 import redis
 import shutil
-import uuid
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_COOKIE_SECURE'] = True  # Set to False if not using HTTPS
-
-redis_connection_pools = {}
-
-def get_redis_connection():
-    if 'user_id' in session:
-        user_id = session['user_id']
-        if user_id not in redis_connection_pools:
-            # Create a new Redis connection pool per user
-            redis_url = os.environ['REDIS_URL']
-            redis_connection_pools[user_id] = redis.ConnectionPool.from_url(redis_url)
-        return redis.Redis(connection_pool=redis_connection_pools[user_id])
-    else:
-        raise Exception('User ID not found in session')
-
-@app.before_request
-def before_request():
-    g.redis = get_redis_connection()
-
-app.config['SESSION_REDIS'] = get_redis_connection
+app.config['SESSION_REDIS'] = redis.from_url(os.environ['REDIS_URL'])
 redis_connection = app.config['SESSION_REDIS']
 
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
 SPOTIPY_CLIENT_SECRET = os.getenv('SPOTIPY_CLIENT_SECRET')
 SPOTIPY_REDIRECT_URI = os.getenv('SPOTIPY_REDIRECT_URI')
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
-cache_dir = os.path.join(app.instance_path, 'spotify_cache')
-os.makedirs(cache_dir, exist_ok=True)
-cache_path = os.path.join(cache_dir, binascii.hexlify(os.urandom(16)).decode() + '.cache')
+cache_dir = os.path.join(app.instance_path, 'spotify_cache.cache')
 
+cache_handler = CacheFileHandler(cache_path=cache_dir)
 oauth = SpotifyOAuth(
     client_id=SPOTIPY_CLIENT_ID,
     client_secret=SPOTIPY_CLIENT_SECRET,
     redirect_uri=SPOTIPY_REDIRECT_URI,
     scope=SPOTIPY_SCOPE,
-    cache_path=cache_path
+    cache_handler=cache_handler
 )
 
 @app.before_request
@@ -61,8 +42,8 @@ def delete_cache_if_not_logged_out():
         token_expiry = session['token_expiry']
         if token_expiry and token_expiry < datetime.utcnow():
             # Clean up the cache if the session has expired
-            if os.path.exists(cache_path):
-                os.remove(cache_path)
+            if os.path.exists(cache_dir):
+                os.remove(cache_dir)
 
 @app.route('/')
 def home():
@@ -87,7 +68,7 @@ def login():
 def logout():
     session.pop("token_info", None)
     session.clear()  # Clear the entire session
-    full_cache_path = os.path.join(app.root_path, cache_path)
+    full_cache_path = os.path.join(app.root_path, cache_dir)
     if os.path.exists(full_cache_path):
         os.remove(full_cache_path)
     return render_template('app/home.html')
@@ -306,6 +287,10 @@ def top_artist():
         user_info = sp.current_user()
         user_name = user_info['display_name']
         return render_template('app/genre.html', context=top_genres, user_name=user_name, songs=top_songs)
+
+    
+    
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -81,8 +81,8 @@ def callback():
     
     access_token = token_info['access_token']
     sp = spotipy.Spotify(auth=access_token)
-    top_genres = topgenres(sp)
-    top_songs = get_top_songs(sp)
+    top_genres = topgenres()
+    top_songs = get_top_songs()
     user_info = sp.current_user()
     user_name = user_info['display_name']
     session['user_id'] = user_info['id']
@@ -187,12 +187,13 @@ def similar_songs():
     return render_template('app/playlist.html', playlist_name=playlist_name)
 
 
-def topgenres(sp):
+def topgenres():
     if 'token_info' not in session:
         return redirect('/')
 
     token_info = session['token_info']
     access_token = token_info['access_token']
+    sp = spotipy.Spotify(auth=access_token)
     current_user = sp.current_user()
     user_id = current_user['id']
 
@@ -209,13 +210,14 @@ def topgenres(sp):
     return top_genres
 
 
-def get_top_songs(sp, limit=12):
+def get_top_songs(limit=12):
     if 'token_info' not in session:
         return redirect('/')
 
     token_info = session['token_info']
     access_token = token_info['access_token']
 
+    sp = spotipy.Spotify(auth=access_token)
     # Get the user's top tracks
     top_tracks = sp.current_user_top_tracks(limit=limit, time_range='short_term')  # 'short_term', 'medium_term', 'long_term'
 

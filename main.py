@@ -81,12 +81,12 @@ def callback():
     
     access_token = token_info['access_token']
     sp = spotipy.Spotify(auth=access_token)
-    top_genres = topgenres()
+    top_genre = topgenres()
     top_songs = get_top_songs()
     user_info = sp.current_user()
     user_name = user_info['display_name']
     session['user_id'] = user_info['id']
-    return render_template('app/genre.html', context=top_genres, user_name=user_name, songs=top_songs)
+    return render_template('app/genre.html', context=top_genre, user_name=user_name, songs=top_songs)
 
 
 def create_or_get_playlist(sp, user_id, playlist_name, playlist_description):

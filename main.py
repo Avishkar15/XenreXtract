@@ -15,16 +15,22 @@ app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_COOKIE_SECURE'] = True  # Set to False if not using HTTPS
 
+redis_connection_pools = {}
+
 def get_redis_connection():
-    if 'redis_connection' not in g:
-        # Create a new Redis connection pool per user
-        redis_url = os.environ['REDIS_URL']
-        g.redis_connection = redis.ConnectionPool.from_url(redis_url)
-    return redis.Redis(connection_pool=g.redis_connection)
+    if 'user_id' in session:
+        user_id = session['user_id']
+        if user_id not in redis_connection_pools:
+            # Create a new Redis connection pool per user
+            redis_url = os.environ['REDIS_URL']
+            redis_connection_pools[user_id] = redis.ConnectionPool.from_url(redis_url)
+        return redis.Redis(connection_pool=redis_connection_pools[user_id])
+    else:
+        raise Exception('User ID not found in session')
 
-
-app.before_request(get_redis_connection)
-
+@app.before_request
+def before_request():
+    g.redis = get_redis_connection()
 
 app.config['SESSION_REDIS'] = get_redis_connection
 redis_connection = app.config['SESSION_REDIS']

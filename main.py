@@ -78,14 +78,14 @@ def logout():
 def callback():
     code = request.args.get('code')
     token_info = oauth.get_access_token(code)
-    session['token_info'] = token_info
-    session['user_id'] = token_info['id']
+    
     access_token = token_info['access_token']
     sp = spotipy.Spotify(auth=access_token)
     top_genres = topgenres(sp)
     top_songs = get_top_songs(sp)
     user_info = sp.current_user()
     user_name = user_info['display_name']
+    session['user_id'] = user_info['id']
     return render_template('app/genre.html', context=top_genres, user_name=user_name, songs=top_songs)
 
 

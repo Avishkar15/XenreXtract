@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, flash
-import spotipy
+from flask_session import Session
 from spotipy import oauth2
 from spotipy.oauth2 import SpotifyOAuth
 from collections import Counter
@@ -13,27 +13,30 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_COOKIE_SECURE'] = True  # Set to False if not using HTTPS
-app.config['SESSION_REDIS'] = redis.from_url(os.environ['REDIS_URL'])
-redis_connection = app.config['SESSION_REDIS']
+redis_connection = redis.from_url('redis://red-ci8p1al9aq0ee2f8kln0:6379')
+app.config['SESSION_REDIS'] = redis_connection
+
+Session(app)
 
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
 SPOTIPY_CLIENT_SECRET = os.getenv('SPOTIPY_CLIENT_SECRET')
 SPOTIPY_REDIRECT_URI = os.getenv('SPOTIPY_REDIRECT_URI')
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
+cache_dir = os.path.join(app.instance_path, 'spotify_cache')
+os.makedirs(cache_dir, exist_ok=True)
+cache_path = os.path.join(cache_dir, binascii.hexlify(os.urandom(16)).decode() + '.cache')
 
 oauth = SpotifyOAuth(
     client_id=SPOTIPY_CLIENT_ID,
     client_secret=SPOTIPY_CLIENT_SECRET,
     redirect_uri=SPOTIPY_REDIRECT_URI,
-    scope=SPOTIPY_SCOPE
+    scope=SPOTIPY_SCOPE,
+    cache_path=cache_path
 )
 
-
-def get_cache_path():
-    cache_dir = os.path.join(app.instance_path, 'spotify_cache', session['user_id'])
-    os.makedirs(cache_dir, exist_ok=True)
-    return os.path.join(cache_dir, 'cache')
-
+@app.before_request
+def before_request():
+    delete_cache_if_not_logged_out()
 
 def delete_cache_if_not_logged_out():
     # Check if the user is logged in and if the session has expired
@@ -41,20 +44,20 @@ def delete_cache_if_not_logged_out():
         token_expiry = session['token_expiry']
         if token_expiry and token_expiry < datetime.utcnow():
             # Clean up the cache if the session has expired
-            cache_path = get_cache_path()
             if os.path.exists(cache_path):
                 os.remove(cache_path)
-
-
-@app.before_request
-def before_request():
-    delete_cache_if_not_logged_out()
-
 
 @app.route('/')
 def home():
     session.pop("token_info", None)
     session.clear()  # Clear the entire session
+    if os.path.exists(cache_dir):
+        for file_name in os.listdir(cache_dir):
+            file_path = os.path.join(cache_dir, file_name)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            else:
+                shutil.rmtree(file_path)
     return render_template('app/home.html', page='home')
 
 
@@ -63,33 +66,37 @@ def login():
     auth_url = oauth.get_authorize_url()
     return redirect(auth_url)
 
-
 @app.route('/logout')
 def logout():
     session.pop("token_info", None)
     session.clear()  # Clear the entire session
-    cache_path = get_cache_path()
-    if os.path.exists(cache_path):
-        os.remove(cache_path)
+    full_cache_path = os.path.join(app.root_path, cache_path)
+    if os.path.exists(full_cache_path):
+        os.remove(full_cache_path)
     return render_template('app/home.html')
 
+    
 
 @app.route('/callback')
 def callback():
+    
     code = request.args.get('code')
     token_info = oauth.get_access_token(code)
-    
+    session['token_info'] = token_info
     access_token = token_info['access_token']
     sp = spotipy.Spotify(auth=access_token)
     top_genres = topgenres()
     top_songs = get_top_songs()
     user_info = sp.current_user()
     user_name = user_info['display_name']
-    session['user_id'] = user_info['id']
     return render_template('app/genre.html', context=top_genres, user_name=user_name, songs=top_songs)
 
-
-def create_or_get_playlist(sp, user_id, playlist_name, playlist_description):
+def create_or_get_playlist(user_id, playlist_name, playlist_description):
+    token_info = session['token_info']
+    access_token = token_info['access_token']
+    
+    
+    sp = spotipy.Spotify(auth=access_token)
     playlists = sp.current_user_playlists(limit=20, offset=0)
     for playlist in playlists['items']:
         if playlist['name'] == playlist_name:
@@ -104,10 +111,12 @@ def generate_playlist():
 
     token_info = session['token_info']
     access_token = token_info['access_token']
+    
+    
     sp = spotipy.Spotify(auth=access_token)
     current_user = sp.current_user()
     user_id = current_user['id']
-    genre = request.form['button_text']
+    genre =request.form['button_text']
     # Get user's liked songs
     limit = 50  # Number of songs per request (maximum: 50)
     offset = 0
@@ -119,8 +128,9 @@ def generate_playlist():
             break  # No more liked songs to retrieve
         track_ids.extend([track["track"]["id"] for track in liked_songs["items"]])
         offset += limit
-
+    
     # Get genre-specific tracks
+    #genre = "k-pop"
     genre_tracks = []
     for track_id in track_ids:
         track_info = sp.track(track_id)
@@ -133,7 +143,7 @@ def generate_playlist():
     # Create a new playlist
     playlist_name = "Liked Songs - {}".format(genre)
     playlist_description = "Playlist of liked songs in the {} genre".format(genre)
-    playlist = create_or_get_playlist(sp, user_id, playlist_name, playlist_description)
+    playlist = create_or_get_playlist(user_id, playlist_name, playlist_description)
 
     existing_tracks = set()
     playlist_items = sp.playlist_items(playlist["id"], fields="items(track.id)", limit=100)
@@ -148,8 +158,7 @@ def generate_playlist():
         batch = tracks_to_add[i:i + batch_size]
         sp.playlist_add_items(playlist["id"], batch)
 
-    return render_template('app/playlist.html', playlist_name=playlist_name)
-
+    return render_template('app/playlist.html',playlist_name=playlist_name)
 
 @app.route('/similar_songs/', methods=['POST'])
 def similar_songs():
@@ -158,24 +167,26 @@ def similar_songs():
 
     token_info = session['token_info']
     access_token = token_info['access_token']
+    
+    
     sp = spotipy.Spotify(auth=access_token)
     current_user = sp.current_user()
     user_id = current_user['id']
-    seed_track_id = request.form['button_text']
+    seed_track_id =request.form['button_text']
 
     track = sp.track(seed_track_id)
     track_name = track['name']
     artist_name = track['artists'][0]['name']
-
+    
     recommendations = sp.recommendations(seed_tracks=[seed_track_id], seed_genres=None, seed_artists=None,
                                          limit=20, country='US')
-
+    
     track_uris = [track['uri'] for track in recommendations['tracks']]
-
-    playlist_name = "Songs like [{} - {}]".format(track_name, artist_name)
-    playlist_description = "Playlist of songs similar to {} by {}".format(track_name, artist_name)
-    playlist = create_or_get_playlist(sp, user_id, playlist_name, playlist_description)
-
+    
+    playlist_name = "Songs like [{} - {}]".format(track_name,artist_name)
+    playlist_description = "Playlist of songs similar to {} by {}".format(track_name,artist_name)
+    playlist = create_or_get_playlist(user_id, playlist_name, playlist_description)
+    
     existing_tracks = set()
     playlist_items = sp.playlist_items(playlist["id"], fields="items(track.id)", limit=100)
     for item in playlist_items["items"]:
@@ -184,8 +195,7 @@ def similar_songs():
     tracks_to_add = [track_id for track_id in track_uris if track_id not in existing_tracks]
     sp.playlist_add_items(playlist["id"], tracks_to_add)
 
-    return render_template('app/playlist.html', playlist_name=playlist_name)
-
+    return render_template('app/playlist.html',playlist_name=playlist_name)
 
 def topgenres():
     if 'token_info' not in session:
@@ -214,7 +224,6 @@ def topgenres():
 
     return top_genres
 
-
 def get_top_songs(limit=12):
     if 'token_info' not in session:
         return redirect('/')
@@ -222,6 +231,7 @@ def get_top_songs(limit=12):
     token_info = session['token_info']
     access_token = token_info['access_token']
 
+    
     sp = spotipy.Spotify(auth=access_token)
     # Get the user's top tracks
     top_tracks = sp.current_user_top_tracks(limit=limit, time_range='short_term')  # 'short_term', 'medium_term', 'long_term'
@@ -231,10 +241,9 @@ def get_top_songs(limit=12):
     artist_names = [track['artists'][0]['name'] for track in top_tracks['items']]
     track_ids = [track['id'] for track in top_tracks['items']]
 
-    tracks = zip(track_names, artist_names, track_ids)
+    tracks= zip(track_names, artist_names, track_ids)
 
     return tracks
-
 
 @app.route('/top_artist', methods=['POST'])
 def top_artist():
@@ -247,7 +256,7 @@ def top_artist():
     user_info = sp.current_user()
     user_name = user_info['display_name']
     try:
-
+        
         artist_name = request.form['search']
         results = sp.search(q='artist:' + artist_name, type='artist')
 
@@ -259,22 +268,32 @@ def top_artist():
         top_tracks = sp.current_user_top_tracks(limit=1000, time_range='medium_term')
 
         # Filter the tracks for the specified artist
-        artist_top_tracks = [track for track in top_tracks['items'] if
-                             artist_id in [artist['id'] for artist in track['artists']]]
+        artist_top_tracks = [track for track in top_tracks['items'] if artist_id in [artist['id'] for artist in track['artists']]]
 
         # Sort the tracks by popularity
         sorted_tracks = sorted(artist_top_tracks, key=lambda track: track['popularity'], reverse=True)
 
         # Extract track names
-        track_names = [track['name'] for track in sorted_tracks]
+        track_names = [track['name'] for track in sorted_tracks[:10]]
 
-        return render_template('app/top_artist.html', tracks=track_names, artist_name=artist_name, user_name=user_name,
-                               image_url=image_url)
+        if not track_names:
+            flash("You have no tracks by this artist in your top songs!","danger")
+            return render_template('app/topartist.html', artist=artist_name, tracks=track_names, image_url=image_url)
+        else:
+            return render_template('app/topartist.html', artist=artist_name, tracks=track_names, image_url=image_url)
+    
+    except IndexError:
+        flash("No such artist found!","danger")
+        top_genres = topgenres()
+        top_songs = get_top_songs()
+        user_info = sp.current_user()
+        user_name = user_info['display_name']
+        return render_template('app/genre.html', context=top_genres, user_name=user_name, songs=top_songs)
 
-    except:
-        flash("Artist not found.")
-        return redirect('/')
+    
+    
 
 
 if __name__ == '__main__':
     app.run(debug=True)
+

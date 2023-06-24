@@ -1,5 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, flash
-from flask_session import Session
+from flask import Flask, render_template, request, redirect,session, flash
 import spotipy
 from spotipy import oauth2
 from spotipy.oauth2 import SpotifyOAuth
@@ -9,15 +8,23 @@ import binascii
 from datetime import datetime
 import redis
 import shutil
+import uuid
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_COOKIE_SECURE'] = True  # Set to False if not using HTTPS
-redis_connection = redis.from_url('redis://red-ci8p1al9aq0ee2f8kln0:6379')
-app.config['SESSION_REDIS'] = redis_connection
 
-Session(app)
+def get_redis_connection():
+    user_id = session.get('user_id')
+    if user_id is None:
+        user_id = str(uuid.uuid4())  # Generate a unique session ID for each user
+        session['user_id'] = user_id
+    return redis.from_url(os.environ['REDIS_URL'] + '/' + user_id)
+
+
+app.config['SESSION_REDIS'] = get_redis_connection
+redis_connection = app.config['SESSION_REDIS']
 
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
 SPOTIPY_CLIENT_SECRET = os.getenv('SPOTIPY_CLIENT_SECRET')
@@ -290,10 +297,6 @@ def top_artist():
         user_info = sp.current_user()
         user_name = user_info['display_name']
         return render_template('app/genre.html', context=top_genres, user_name=user_name, songs=top_songs)
-
-    
-    
-
 
 if __name__ == '__main__':
     app.run(debug=True)

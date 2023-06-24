@@ -20,7 +20,7 @@ def get_redis_connection():
     if user_id is None:
         user_id = str(uuid.uuid4())  # Generate a unique session ID for each user
         session['user_id'] = user_id
-    return redis.from_url(os.environ['REDIS_URL'] + '/' + user_id)
+    return redis.from_url('redis://red-ci8p1al9aq0ee2f8kln0:6379' +'/'+ user_id)
 
 
 app.config['SESSION_REDIS'] = get_redis_connection

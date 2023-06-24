@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect,session, flash
+from flask import Flask, render_template, request, redirect,session, flash, g
 import spotipy
 from spotipy import oauth2
 from spotipy.oauth2 import SpotifyOAuth
@@ -16,11 +16,14 @@ app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_COOKIE_SECURE'] = True  # Set to False if not using HTTPS
 
 def get_redis_connection():
-    user_id = session.get('user_id')
-    if user_id is None:
-        user_id = str(uuid.uuid4())  # Generate a unique session ID for each user
-        session['user_id'] = user_id
-    return redis.from_url('redis://red-ci8p1al9aq0ee2f8kln0:6379' +'/'+ user_id)
+    if 'redis_connection' not in g:
+        # Create a new Redis connection pool per user
+        redis_url = os.environ['REDIS_URL']
+        g.redis_connection = redis.ConnectionPool.from_url(redis_url)
+    return redis.Redis(connection_pool=g.redis_connection)
+
+
+app.before_request(get_redis_connection)
 
 
 app.config['SESSION_REDIS'] = get_redis_connection

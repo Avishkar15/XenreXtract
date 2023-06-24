@@ -55,10 +55,6 @@ def before_request():
 def home():
     session.pop("token_info", None)
     session.clear()  # Clear the entire session
-    user_id = session['user_id']
-    cache_dir = os.path.join(app.instance_path, 'spotify_cache', user_id)
-    if os.path.exists(cache_dir):
-        shutil.rmtree(cache_dir)
     return render_template('app/home.html', page='home')
 
 

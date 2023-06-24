@@ -193,6 +193,8 @@ def topgenres():
 
     token_info = session['token_info']
     access_token = token_info['access_token']
+
+    
     sp = spotipy.Spotify(auth=access_token)
     current_user = sp.current_user()
     user_id = current_user['id']
@@ -206,6 +208,9 @@ def topgenres():
 
     # Get the top 6 genres
     top_genres = [genre for genre, _ in Counter(genres).most_common(8)]
+    
+    #for genre, count in top_genres:
+        #print(f"- {genre} ({count} occurrences)")
 
     return top_genres
 

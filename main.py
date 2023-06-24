@@ -71,27 +71,31 @@ def logout():
 
 @app.route('/callback')
 def callback():
-    cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
-    auth_manager = spotipy.oauth2.SpotifyOAuth(
-    client_id=SPOTIPY_CLIENT_ID,
-    client_secret=SPOTIPY_CLIENT_SECRET,
-    redirect_uri=SPOTIPY_REDIRECT_URI,
-    scope=SPOTIPY_SCOPE,
-    cache_handler=cache_handler,
-    show_dialog=True
-    )
+    try:
+        cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
+        auth_manager = spotipy.oauth2.SpotifyOAuth(
+        client_id=SPOTIPY_CLIENT_ID,
+        client_secret=SPOTIPY_CLIENT_SECRET,
+        redirect_uri=SPOTIPY_REDIRECT_URI,
+        scope=SPOTIPY_SCOPE,
+        cache_handler=cache_handler,
+        show_dialog=True
+        )
 
-    code = request.args.get('code')
-    token_info = auth_manager.get_access_token(code)
-    session['token_info'] = token_info
-    access_token = token_info['access_token']
-    sp = spotipy.Spotify(auth_manager=auth_manager)
+        code = request.args.get('code')
+        token_info = auth_manager.get_access_token(code)
+        session['token_info'] = token_info
+        access_token = token_info['access_token']
+        sp = spotipy.Spotify(auth_manager=auth_manager)
 
-    top_genres = topgenres()
-    top_songs = get_top_songs()
-    user_info = sp.current_user()
-    user_name = user_info['display_name']
-    return render_template('app/genre.html', context=top_genres, user_name=user_name, songs=top_songs)
+        top_genres = topgenres()
+        top_songs = get_top_songs()
+        user_info = sp.current_user()
+        user_name = user_info['display_name']
+        return render_template('app/genre.html', context=top_genres, user_name=user_name, songs=top_songs)
+    except Exception as e:
+        flash("You need to logged in!","danger")
+        return render_template('app/home.html', page='home')
 
 def create_or_get_playlist(user_id, playlist_name, playlist_description):
     cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)

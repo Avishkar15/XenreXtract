@@ -23,14 +23,7 @@ SPOTIPY_REDIRECT_URI = os.getenv('SPOTIPY_REDIRECT_URI')
 SPOTIPY_SCOPE = 'user-library-read playlist-modify-public user-top-read'
 cache_dir = os.path.join(app.instance_path, 'spotify_cache.cache')
 
-cache_handler = CacheFileHandler(cache_path=cache_dir)
-oauth = SpotifyOAuth(
-    client_id=SPOTIPY_CLIENT_ID,
-    client_secret=SPOTIPY_CLIENT_SECRET,
-    redirect_uri=SPOTIPY_REDIRECT_URI,
-    scope=SPOTIPY_SCOPE,
-    cache_handler=cache_handler
-)
+
 
 @app.before_request
 def before_request():
@@ -48,20 +41,21 @@ def delete_cache_if_not_logged_out():
 @app.route('/')
 def home():
     session.pop("token_info", None)
-    session.clear()  # Clear the entire session
-    if os.path.exists(cache_dir):
-        for file_name in os.listdir(cache_dir):
-            file_path = os.path.join(cache_dir, file_name)
-            if os.path.isfile(file_path):
-                os.remove(file_path)
-            else:
-                shutil.rmtree(file_path)
     return render_template('app/home.html', page='home')
 
 
 @app.route('/login')
 def login():
-    auth_url = oauth.get_authorize_url()
+    cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
+    auth_manager = spotipy.oauth2.SpotifyOAuth(
+    client_id=SPOTIPY_CLIENT_ID,
+    client_secret=SPOTIPY_CLIENT_SECRET,
+    redirect_uri=SPOTIPY_REDIRECT_URI,
+    scope=SPOTIPY_SCOPE,
+    cache_handler=cache_handler,
+    show_dialog=True
+    )
+    auth_url = auth_manager.get_authorize_url()
     return redirect(auth_url)
 
 @app.route('/logout')
@@ -77,12 +71,22 @@ def logout():
 
 @app.route('/callback')
 def callback():
-    
+    cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
+    auth_manager = spotipy.oauth2.SpotifyOAuth(
+    client_id=SPOTIPY_CLIENT_ID,
+    client_secret=SPOTIPY_CLIENT_SECRET,
+    redirect_uri=SPOTIPY_REDIRECT_URI,
+    scope=SPOTIPY_SCOPE,
+    cache_handler=cache_handler,
+    show_dialog=True
+    )
+
     code = request.args.get('code')
-    token_info = oauth.get_access_token(code)
+    token_info = auth_manager.get_access_token(code)
     session['token_info'] = token_info
     access_token = token_info['access_token']
-    sp = spotipy.Spotify(auth=access_token)
+    sp = spotipy.Spotify(auth_manager=auth_manager)
+
     top_genres = topgenres()
     top_songs = get_top_songs()
     user_info = sp.current_user()
@@ -90,11 +94,11 @@ def callback():
     return render_template('app/genre.html', context=top_genres, user_name=user_name, songs=top_songs)
 
 def create_or_get_playlist(user_id, playlist_name, playlist_description):
-    token_info = session['token_info']
-    access_token = token_info['access_token']
-    
-    
-    sp = spotipy.Spotify(auth=access_token)
+    cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
+    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_handler=cache_handler)
+
+    sp = spotipy.Spotify(auth_manager=auth_manager)
+
     playlists = sp.current_user_playlists(limit=20, offset=0)
     for playlist in playlists['items']:
         if playlist['name'] == playlist_name:
@@ -104,14 +108,12 @@ def create_or_get_playlist(user_id, playlist_name, playlist_description):
 
 @app.route('/generate_playlist/', methods=['POST'])
 def generate_playlist():
-    if 'token_info' not in session:
-        return redirect('/')
+    cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
+    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_handler=cache_handler)
+    
+    
+    sp = spotipy.Spotify(auth_manager=auth_manager)
 
-    token_info = session['token_info']
-    access_token = token_info['access_token']
-    
-    
-    sp = spotipy.Spotify(auth=access_token)
     current_user = sp.current_user()
     user_id = current_user['id']
     genre =request.form['button_text']
@@ -160,14 +162,12 @@ def generate_playlist():
 
 @app.route('/similar_songs/', methods=['POST'])
 def similar_songs():
-    if 'token_info' not in session:
-        return redirect('/')
+    cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
+    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_handler=cache_handler)
+    
+    
+    sp = spotipy.Spotify(auth_manager=auth_manager)
 
-    token_info = session['token_info']
-    access_token = token_info['access_token']
-    
-    
-    sp = spotipy.Spotify(auth=access_token)
     current_user = sp.current_user()
     user_id = current_user['id']
     seed_track_id =request.form['button_text']
@@ -196,14 +196,12 @@ def similar_songs():
     return render_template('app/playlist.html',playlist_name=playlist_name)
 
 def topgenres():
-    if 'token_info' not in session:
-        return redirect('/')
-
-    token_info = session['token_info']
-    access_token = token_info['access_token']
+    cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
+    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_handler=cache_handler)
 
     
-    sp = spotipy.Spotify(auth=access_token)
+    sp = spotipy.Spotify(auth_manager=auth_manager)
+
     current_user = sp.current_user()
     user_id = current_user['id']
 
@@ -223,14 +221,12 @@ def topgenres():
     return top_genres
 
 def get_top_songs(limit=12):
-    if 'token_info' not in session:
-        return redirect('/')
-
-    token_info = session['token_info']
-    access_token = token_info['access_token']
+    cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
+    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_handler=cache_handler)
 
     
-    sp = spotipy.Spotify(auth=access_token)
+    sp = spotipy.Spotify(auth_manager=auth_manager)
+
     # Get the user's top tracks
     top_tracks = sp.current_user_top_tracks(limit=limit, time_range='short_term')  # 'short_term', 'medium_term', 'long_term'
 
@@ -245,12 +241,10 @@ def get_top_songs(limit=12):
 
 @app.route('/top_artist', methods=['POST'])
 def top_artist():
-    if 'token_info' not in session:
-        return redirect('/')
+    cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
+    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_handler=cache_handler)
+    sp = spotipy.Spotify(auth_manager=auth_manager)
 
-    token_info = session['token_info']
-    access_token = token_info['access_token']
-    sp = spotipy.Spotify(auth=access_token)
     user_info = sp.current_user()
     user_name = user_info['display_name']
     try:

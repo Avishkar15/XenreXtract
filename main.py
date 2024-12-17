@@ -7,7 +7,7 @@ import asyncio
 import aiohttp
 
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="templates/apps")
 
 # Spotify OAuth Setup
 SPOTIPY_CLIENT_ID = "your_client_id"

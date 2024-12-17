@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, flash
+from flask import copy_current_request_context
 import spotipy
 from spotipy import oauth2
 from spotipy.oauth2 import SpotifyOAuth
@@ -121,7 +122,8 @@ def generate_playlist():
     user_id = sp.current_user()['id']
     genre = request.form['button_text']
 
-    # Step 1: Fetch liked songs with threading
+    # Step 1: Fetch all liked songs in parallel
+    @copy_current_request_context
     def fetch_liked_tracks(sp, max_tracks=200):
         limit = 50
         offsets = [offset for offset in range(0, max_tracks, limit)]
@@ -137,7 +139,8 @@ def generate_playlist():
             track_ids.update(result)
         return list(track_ids)
 
-    # Step 2: Fetch genre-specific tracks with artist genre parallelization
+    # Step 2: Fetch genre-specific tracks in parallel
+    @copy_current_request_context
     def fetch_genre_tracks(sp, track_ids, target_genre):
         genre_tracks = set()
         batch_size = 50
@@ -146,9 +149,12 @@ def generate_playlist():
             batch_genre_tracks = set()
             tracks_info = sp.tracks(batch)
             artist_ids = list({artist['id'] for track in tracks_info['tracks'] for artist in track['artists']})
+
+            # Fetch artist genres in bulk
             artists_info = sp.artists(artist_ids)
             artist_genres = {artist['id']: artist['genres'] for artist in artists_info['artists']}
 
+            # Match tracks with the specified genre
             for track in tracks_info['tracks']:
                 for artist in track['artists']:
                     if target_genre.lower() in [g.lower() for g in artist_genres.get(artist['id'], [])]:
@@ -156,13 +162,13 @@ def generate_playlist():
             return batch_genre_tracks
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            for i in range(0, len(track_ids), batch_size):
-                batch = track_ids[i:i + batch_size]
-                results = executor.submit(process_batch, batch)
-                genre_tracks.update(results.result())
+            futures = [executor.submit(process_batch, track_ids[i:i + batch_size])
+                       for i in range(0, len(track_ids), batch_size)]
+            for future in concurrent.futures.as_completed(futures):
+                genre_tracks.update(future.result())
         return list(genre_tracks)
 
-    # Step 3: Fetch liked songs in parallel
+    # Step 3: Fetch liked songs
     track_ids = fetch_liked_tracks(sp, max_tracks=200)
 
     # Step 4: Fetch genre-specific tracks
@@ -173,7 +179,7 @@ def generate_playlist():
     playlist_description = f"Playlist of liked songs in the {genre} genre"
     playlist = create_or_get_playlist(user_id, playlist_name, playlist_description)
 
-    # Step 6: Deduplicate and add new tracks
+    # Step 6: Filter duplicates and add tracks
     existing_tracks = {item['track']['id'] for item in sp.playlist_items(playlist['id'], fields="items(track.id)")['items']}
     tracks_to_add = [track for track in genre_tracks if track not in existing_tracks]
 

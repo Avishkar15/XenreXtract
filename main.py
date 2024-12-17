@@ -110,6 +110,8 @@ def create_or_get_playlist(user_id, playlist_name, playlist_description):
     return sp.user_playlist_create(user_id, playlist_name, public=True, description=playlist_description)
 
 
+import concurrent.futures
+
 @app.route('/generate_playlist/', methods=['POST'])
 def generate_playlist():
     cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
@@ -119,45 +121,51 @@ def generate_playlist():
     user_id = sp.current_user()['id']
     genre = request.form['button_text']
 
-    # Step 1: Fetch all liked songs in batches and deduplicate immediately
+    # Step 1: Fetch liked songs with threading
     def fetch_liked_tracks(sp, max_tracks=200):
         limit = 50
-        track_ids = set()  # Set to ensure no duplicates
-        for offset in range(0, max_tracks, limit):
+        offsets = [offset for offset in range(0, max_tracks, limit)]
+        track_ids = set()
+
+        def fetch_batch(offset):
             liked_songs = sp.current_user_saved_tracks(limit=limit, offset=offset)
-            if not liked_songs['items']:
-                break
-            track_ids.update(track['track']['id'] for track in liked_songs['items'])
+            return [track["track"]["id"] for track in liked_songs['items']]
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            results = executor.map(fetch_batch, offsets)
+        for result in results:
+            track_ids.update(result)
         return list(track_ids)
 
-    # Step 2: Fetch genres for tracks in batches
+    # Step 2: Fetch genre-specific tracks with artist genre parallelization
     def fetch_genre_tracks(sp, track_ids, target_genre):
         genre_tracks = set()
         batch_size = 50
 
-        for i in range(0, len(track_ids), batch_size):
-            # Fetch multiple tracks in one API call
-            batch = track_ids[i:i + batch_size]
+        def process_batch(batch):
+            batch_genre_tracks = set()
             tracks_info = sp.tracks(batch)
-            
-            # Collect artist IDs from the tracks
             artist_ids = list({artist['id'] for track in tracks_info['tracks'] for artist in track['artists']})
-
-            # Fetch genres for all artists in a single API call
             artists_info = sp.artists(artist_ids)
             artist_genres = {artist['id']: artist['genres'] for artist in artists_info['artists']}
 
-            # Match tracks to the genre
             for track in tracks_info['tracks']:
                 for artist in track['artists']:
-                    if target_genre.lower() in (g.lower() for g in artist_genres.get(artist['id'], [])):
-                        genre_tracks.add(track['id'])  # Add only matching track IDs
+                    if target_genre.lower() in [g.lower() for g in artist_genres.get(artist['id'], [])]:
+                        batch_genre_tracks.add(track['id'])
+            return batch_genre_tracks
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for i in range(0, len(track_ids), batch_size):
+                batch = track_ids[i:i + batch_size]
+                results = executor.submit(process_batch, batch)
+                genre_tracks.update(results.result())
         return list(genre_tracks)
 
-    # Step 3: Fetch liked songs (deduplicated)
+    # Step 3: Fetch liked songs in parallel
     track_ids = fetch_liked_tracks(sp, max_tracks=200)
 
-    # Step 4: Get genre-specific tracks (deduplicated)
+    # Step 4: Fetch genre-specific tracks
     genre_tracks = fetch_genre_tracks(sp, track_ids, genre)
 
     # Step 5: Create or fetch the playlist
@@ -165,7 +173,7 @@ def generate_playlist():
     playlist_description = f"Playlist of liked songs in the {genre} genre"
     playlist = create_or_get_playlist(user_id, playlist_name, playlist_description)
 
-    # Step 6: Check existing tracks and filter out duplicates
+    # Step 6: Deduplicate and add new tracks
     existing_tracks = {item['track']['id'] for item in sp.playlist_items(playlist['id'], fields="items(track.id)")['items']}
     tracks_to_add = [track for track in genre_tracks if track not in existing_tracks]
 
@@ -175,6 +183,7 @@ def generate_playlist():
             sp.playlist_add_items(playlist['id'], tracks_to_add[i:i + 100])
 
     return render_template('app/playlist.html', playlist_name=playlist_name)
+
 
 
 @app.route('/similar_songs/', methods=['POST'])

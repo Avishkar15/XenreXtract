@@ -8,6 +8,8 @@ import aiohttp
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates/app")
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 # Spotify OAuth Setup
 SPOTIPY_CLIENT_ID = "your_client_id"

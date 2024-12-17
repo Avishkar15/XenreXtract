@@ -5,3 +5,4 @@ aiohttp
 jinja2
 redis
 python-multipart
+uvicorn

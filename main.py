@@ -109,6 +109,7 @@ def create_or_get_playlist(user_id, playlist_name, playlist_description):
             return playlist
     return sp.user_playlist_create(user_id, playlist_name, public=True, description=playlist_description)
 
+
 @app.route('/generate_playlist/', methods=['POST'])
 def generate_playlist():
     cache_handler = spotipy.cache_handler.FlaskSessionCacheHandler(session)
@@ -162,8 +163,6 @@ def generate_playlist():
         sp.playlist_add_items(playlist["id"], batch)
 
     return render_template('app/playlist.html',playlist_name=playlist_name)
-
-
 
 @app.route('/similar_songs/', methods=['POST'])
 def similar_songs():

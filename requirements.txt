@@ -1,8 +1,5 @@
-﻿fastapi
+Flask
 spotipy
 gunicorn
-aiohttp
-jinja2
+flask-session
 redis
-python-multipart
-uvicorn

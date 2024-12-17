@@ -77,7 +77,7 @@ async def generate_playlist(request: Request, button_text: str = Form(...)):
     playlist = create_or_get_playlist(sp, user_id, playlist_name, playlist_description)
 
     # Avoid duplicates
-    existing_tracks = {item["track"]["id"] for item in sp.playlist_items(playlist["id"], fields="items(track.id")["items"])}
+    existing_tracks = {item["track"]["id"] for item in sp.playlist_items(playlist["id"], fields="items(track.id)")["items"]}
     tracks_to_add = [track for track in genre_tracks if track not in existing_tracks]
 
     # Add tracks in batches

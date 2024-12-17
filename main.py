@@ -8,7 +8,7 @@ import asyncio
 import aiohttp
 
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="templates/app")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
